@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand: #22c55e;
+    --brand-dim: #16a34a;
+    --surface-900: #0a0e1a;
+    --surface-800: #0f1629;
+    --surface-700: #151e35;
+    --surface-600: #1c2844;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.12);
+  }
+
+  .light {
+    --surface-900: #f8fafc;
+    --surface-800: #f1f5f9;
+    --surface-700: #e2e8f0;
+    --surface-600: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(0,0,0,0.14);
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--surface-900);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+  }
+
+  .glass-card:hover {
+    border-color: var(--border-hover);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm
+           bg-brand-500 text-white hover:bg-brand-600 
+           transition-all duration-200 active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-surface-900;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm
+           bg-white/5 border border-white/10 text-slate-200
+           hover:bg-white/10 hover:border-white/20
+           transition-all duration-200 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm
+           text-slate-400 hover:text-slate-200 hover:bg-white/5
+           transition-all duration-200;
+  }
+
+  .input-base {
+    @apply w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10
+           text-slate-200 placeholder-slate-500
+           focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30
+           transition-all duration-200;
+  }
+
+  .chat-bubble-user {
+    @apply ml-auto max-w-[85%] px-4 py-3 rounded-2xl rounded-tr-sm
+           bg-brand-500/20 border border-brand-500/30 text-slate-200 text-sm;
+  }
+
+  .chat-bubble-ai {
+    @apply mr-auto max-w-[90%] px-4 py-3 rounded-2xl rounded-tl-sm
+           bg-white/5 border border-white/10 text-slate-200 text-sm leading-relaxed;
+  }
+
+  .tab-active {
+    @apply bg-brand-500/15 border-brand-500/50 text-brand-400;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  .source-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
+           bg-brand-500/15 border border-brand-500/30 text-brand-400;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* PDF viewer */
+.react-pdf__Page__canvas {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 8px;
+}
+
+/* Prose styles for AI responses */
+.prose-chat {
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.prose-chat strong {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+.prose-chat ul {
+  list-style: disc;
+  margin-left: 1.2rem;
+  margin-top: 0.4rem;
+}
+.prose-chat li {
+  margin-bottom: 0.2rem;
+}
+.prose-chat code {
+  background: rgba(255,255,255,0.08);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
