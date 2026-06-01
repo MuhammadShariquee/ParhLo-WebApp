@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from pydantic import BaseModel
 from app.core.auth import get_current_user
-from app.core.database import db
+from app.db.supabase_client import db
 from app.core.config import settings
 from app.services.pdf_service import process_pdf_background
 from app.services.vector_store import vector_store
@@ -83,7 +83,7 @@ async def list_pdfs(current_user: dict = Depends(get_current_user)):
 @router.get("/{pdf_id}")
 async def get_pdf(pdf_id: str, current_user: dict = Depends(get_current_user)):
     """Get a specific PDF."""
-    pdf = await db.get_pdf(pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
     return pdf
@@ -92,7 +92,7 @@ async def get_pdf(pdf_id: str, current_user: dict = Depends(get_current_user)):
 @router.get("/{pdf_id}/status")
 async def get_pdf_status(pdf_id: str, current_user: dict = Depends(get_current_user)):
     """Get PDF processing status."""
-    pdf = await db.get_pdf(pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 
@@ -125,7 +125,7 @@ async def rename_pdf(
 @router.delete("/{pdf_id}")
 async def delete_pdf(pdf_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a PDF and all its data."""
-    pdf = await db.get_pdf(pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 
@@ -151,7 +151,7 @@ async def delete_pdf(pdf_id: str, current_user: dict = Depends(get_current_user)
 async def serve_pdf(pdf_id: str, current_user: dict = Depends(get_current_user)):
     """Serve PDF file for viewer."""
     from fastapi.responses import FileResponse
-    pdf = await db.get_pdf(pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 

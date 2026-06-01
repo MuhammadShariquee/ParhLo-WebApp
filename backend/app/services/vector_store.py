@@ -40,15 +40,36 @@ class VectorStore:
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for a list of texts using Gemini."""
-        if settings.GEMINI_API_KEY:
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            
-        result = genai.embed_content(
-            model="models/text-embedding-004",
-            content=texts,
-            task_type="retrieval_document"
-        )
-        return result['embedding']
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+
+        if len(texts) == 1:
+            # Single text: Gemini returns {'embedding': [...]}
+            result = genai.embed_content(
+                model="models/text-embedding-004",
+                content=texts[0],
+                task_type="retrieval_document"
+            )
+            return [result['embedding']]
+        else:
+            # Batch: Gemini returns {'embedding': [[...], [...]]} for list input
+            result = genai.embed_content(
+                model="models/text-embedding-004",
+                content=texts,
+                task_type="retrieval_document"
+            )
+            # Handle both 'embedding' and 'embeddings' key formats
+            emb = result.get('embedding') or result.get('embeddings')
+            if emb and isinstance(emb[0], list):
+                return emb
+            # Fallback: embed one at a time
+            return [
+                genai.embed_content(
+                    model="models/text-embedding-004",
+                    content=t,
+                    task_type="retrieval_document"
+                )['embedding']
+                for t in texts
+            ]
 
     def add_chunks(self, pdf_id: str, chunks: List[Dict]) -> None:
         """

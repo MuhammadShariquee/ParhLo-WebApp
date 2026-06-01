@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.core.auth import get_current_user
-from app.core.database import db
+from app.db.supabase_client import db
 from app.services.ai_service import ai_service
 from app.services.vector_store import vector_store
 from app.services.cache_service import cache
@@ -28,7 +28,7 @@ async def generate_quiz(
     current_user: dict = Depends(get_current_user)
 ):
     """Generate MCQs from a PDF."""
-    pdf = await db.get_pdf(body.pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(body.pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 
@@ -70,7 +70,7 @@ async def submit_score(
 ):
     """Submit quiz score."""
     try:
-        await db.update_quiz_score(body.quiz_id, body.score)
+        await db.update_quiz_score(body.quiz_id, current_user["id"], body.score)
         return {"success": True}
     except Exception as e:
         logger.error(f"Score submission error: {e}")
@@ -83,12 +83,12 @@ async def get_quiz_history(
     current_user: dict = Depends(get_current_user)
 ):
     """Get quiz history for a PDF."""
-    pdf = await db.get_pdf(pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 
     try:
-        quizzes = await db.get_user_quizzes(current_user["id"], pdf_id)
+        quizzes = await db.get_quiz_history(current_user["id"], pdf_id)
         return {"quizzes": quizzes}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to get quiz history")

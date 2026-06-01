@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
 from app.core.auth import get_current_user
-from app.core.database import db
+from app.db.supabase_client import db
 from app.services.ai_service import ai_service
 from app.services.vector_store import vector_store
 from app.services.cache_service import cache
@@ -33,7 +33,7 @@ async def ask_question(
 ):
     """Ask a question about a PDF using RAG."""
     # Verify PDF access
-    pdf = await db.get_pdf(body.pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(body.pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 
@@ -121,7 +121,7 @@ async def quick_action(
     current_user: dict = Depends(get_current_user)
 ):
     """Apply quick actions to an existing answer."""
-    pdf = await db.get_pdf(body.pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(body.pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 
@@ -149,7 +149,7 @@ async def get_chat_history(
     current_user: dict = Depends(get_current_user)
 ):
     """Get chat history for a PDF."""
-    pdf = await db.get_pdf(pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 

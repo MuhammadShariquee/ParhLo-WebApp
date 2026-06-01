@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from app.core.auth import get_current_user
-from app.core.database import db
+from app.db.supabase_client import db
 from app.services.ai_service import ai_service
 from app.services.vector_store import vector_store
 from app.services.cache_service import cache
@@ -23,7 +23,7 @@ async def generate_exam_questions(
     current_user: dict = Depends(get_current_user)
 ):
     """Generate exam questions in Pakistani exam style."""
-    pdf = await db.get_pdf(body.pdf_id, current_user["id"])
+    pdf = await db.get_pdf_by_id(body.pdf_id, current_user["id"])
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 

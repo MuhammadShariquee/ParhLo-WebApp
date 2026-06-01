@@ -1,8 +1,8 @@
 """Auth endpoints — Supabase handles actual auth, this syncs user data."""
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from app.core.auth import get_current_user
-from app.core.database import db
+from app.db.supabase_client import db
 from loguru import logger
 
 router = APIRouter()
@@ -20,10 +20,10 @@ async def sync_user(
 ):
     """Sync user data after Supabase auth. Call after login."""
     try:
-        user = await db.upsert_user(
+        user = await db.get_or_create_user_profile(
             user_id=current_user["id"],
+            email=body.email or current_user["email"],
             name=body.name or current_user.get("name", "Student"),
-            email=body.email or current_user["email"]
         )
         return {"success": True, "user": user}
     except Exception as e:
@@ -35,14 +35,11 @@ async def sync_user(
 async def get_me(current_user: dict = Depends(get_current_user)):
     """Get current user profile."""
     try:
-        user = await db.get_user(current_user["id"])
-        if not user:
-            # Auto-create if not exists
-            user = await db.upsert_user(
-                user_id=current_user["id"],
-                name=current_user.get("name", "Student"),
-                email=current_user["email"]
-            )
+        user = await db.get_or_create_user_profile(
+            user_id=current_user["id"],
+            email=current_user["email"],
+            name=current_user.get("name", "Student"),
+        )
         return user
     except Exception as e:
         logger.error(f"Get me error: {e}")
