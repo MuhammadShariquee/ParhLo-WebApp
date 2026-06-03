@@ -323,3 +323,6 @@ MIT License — free to use, modify, and distribute.
 ---
 
 *Built with ❤️ for Pakistani students. Stop scrolling, ParhLo!*
+
+
+in progress soon will be launching it complete
