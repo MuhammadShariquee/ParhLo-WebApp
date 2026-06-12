@@ -4,7 +4,7 @@ import { useStore, type LocalChatMessage } from '../../store/useStore'
 import { chatApi } from '../../services/api'
 import {
   Send, Copy, RotateCcw, Lightbulb, Minimize2, Hash,
-  BookMarked, AlertCircle, CheckCheck, Bot, User, ShieldCheck
+  AlertCircle, CheckCheck, Bot, User, ShieldCheck
 } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 

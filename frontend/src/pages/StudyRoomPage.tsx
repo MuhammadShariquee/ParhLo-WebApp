@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ArrowLeft, BookOpen, MessageSquare, FileText, Brain, Trophy,
-  Sun, Moon, Globe, ChevronDown, Loader2, AlertCircle
+  BookOpen, Globe, ChevronDown, Loader2, AlertCircle
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { pdfApi, type PDF } from '../services/api'
@@ -21,7 +20,7 @@ export default function StudyRoomPage() {
   const { pdfId } = useParams<{ pdfId: string }>()
   const navigate = useNavigate()
   const {
-    activePdf, setActivePdf, theme, toggleTheme, language, setLanguage,
+    activePdf, setActivePdf, language, setLanguage,
     detailLevel, setDetailLevel, highlightedPages, setHighlightedPages, setCurrentPdfPage
   } = useStore()
 

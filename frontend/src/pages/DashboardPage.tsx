@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { pdfApi, type PDF } from '../services/api'
 import {
-  Upload, Trash2, Pencil, BookOpen, Clock, CheckCircle, XCircle, Loader, MoreVertical, ArrowRight
+  Trash2, Pencil, BookOpen, Clock, CheckCircle, XCircle, Loader, MoreVertical, ArrowRight
 } from 'lucide-react'
 import Sidebar from '../components/layout/Sidebar'
 
@@ -25,7 +25,7 @@ function StatusBadge({ status }: { status: PDF['chunk_status'] }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const { user, pdfs, setPdfs, addPdf, updatePdf, removePdf, theme, toggleTheme, signOut } = useStore()
+  const { user, pdfs, setPdfs, addPdf, updatePdf, removePdf } = useStore()
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [renamingId, setRenamingId] = useState<string | null>(null)
