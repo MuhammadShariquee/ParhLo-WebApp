@@ -10,7 +10,12 @@ from app.core.config import settings
 from loguru import logger
 from typing import List, Dict, Optional
 import time
+from sentence_transformers import SentenceTransformer
 
+# Load model once at module level to save memory and avoid reloading per call
+logger.info("Loading sentence-transformers embedding model...")
+embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+logger.info("Embedding model loaded.")
 
 class VectorStore:
     """Abstracted vector store using ChromaDB."""
@@ -37,24 +42,13 @@ class VectorStore:
         )
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings one at a time with delay to avoid rate limits."""
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        embeddings = []
-        for i, text in enumerate(texts):
-            try:
-                result = genai.embed_content(
-                    model="models/gemini-embedding-001",
-                    content=text,
-                    task_type="retrieval_document"
-                )
-                embeddings.append(result['embedding'])
-                # Small delay every 5 chunks to avoid Gemini free tier rate limit
-                if i % 5 == 0 and i > 0:
-                    time.sleep(1)
-            except Exception as e:
-                logger.error(f"Embedding error for chunk {i}: {e}")
-                raise
-        return embeddings
+        """Generate embeddings using local sentence-transformers model."""
+        try:
+            embeddings = embedding_model.encode(texts, show_progress_bar=False)
+            return embeddings.tolist()
+        except Exception as e:
+            logger.error(f"Local embedding error: {e}")
+            raise
 
     def add_chunks(self, pdf_id: str, chunks: List[Dict]) -> None:
         """
