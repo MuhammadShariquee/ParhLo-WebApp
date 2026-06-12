@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 
     @property
     def allowed_origins_list(self) -> List[str]:
-        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",")]
+        return [o.strip().strip('"').strip("'") for o in self.ALLOWED_ORIGINS.split(",") if o.strip().strip('"').strip("'")]
 
     def ensure_dirs(self):
         os.makedirs(self.UPLOAD_DIR, exist_ok=True)

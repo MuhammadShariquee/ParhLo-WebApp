@@ -55,6 +55,7 @@ async def health_check():
 @app.on_event("startup")
 async def startup_event():
     logger.info("ParhLo API starting up...")
+    logger.info(f"CORS Allowed Origins: {settings.allowed_origins_list}")
 
 
 @app.on_event("shutdown")
