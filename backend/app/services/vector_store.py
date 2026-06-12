@@ -8,8 +8,8 @@ from chromadb.config import Settings as ChromaSettings
 import google.generativeai as genai
 from app.core.config import settings
 from loguru import logger
-from typing import List, Dict, Optional, Tuple
-import uuid
+from typing import List, Dict, Optional
+import time
 
 
 class VectorStore:
@@ -27,8 +27,6 @@ class VectorStore:
             )
         return self._client
 
-
-
     def _get_collection(self, pdf_id: str):
         """Get or create a collection per PDF."""
         client = self._get_client()
@@ -39,37 +37,24 @@ class VectorStore:
         )
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for a list of texts using Gemini."""
+        """Generate embeddings one at a time with delay to avoid rate limits."""
         genai.configure(api_key=settings.GEMINI_API_KEY)
-
-        if len(texts) == 1:
-            # Single text: Gemini returns {'embedding': [...]}
-            result = genai.embed_content(
-                model="models/text-embedding-004",
-                content=texts[0],
-                task_type="retrieval_document"
-            )
-            return [result['embedding']]
-        else:
-            # Batch: Gemini returns {'embedding': [[...], [...]]} for list input
-            result = genai.embed_content(
-                model="models/text-embedding-004",
-                content=texts,
-                task_type="retrieval_document"
-            )
-            # Handle both 'embedding' and 'embeddings' key formats
-            emb = result.get('embedding') or result.get('embeddings')
-            if emb and isinstance(emb[0], list):
-                return emb
-            # Fallback: embed one at a time
-            return [
-                genai.embed_content(
-                    model="models/text-embedding-004",
-                    content=t,
+        embeddings = []
+        for i, text in enumerate(texts):
+            try:
+                result = genai.embed_content(
+                    model="models/gemini-embedding-001",
+                    content=text,
                     task_type="retrieval_document"
-                )['embedding']
-                for t in texts
-            ]
+                )
+                embeddings.append(result['embedding'])
+                # Small delay every 5 chunks to avoid Gemini free tier rate limit
+                if i % 5 == 0 and i > 0:
+                    time.sleep(1)
+            except Exception as e:
+                logger.error(f"Embedding error for chunk {i}: {e}")
+                raise
+        return embeddings
 
     def add_chunks(self, pdf_id: str, chunks: List[Dict]) -> None:
         """
@@ -81,7 +66,14 @@ class VectorStore:
         texts = [c["text"] for c in chunks]
         embeddings = self.embed_texts(texts)
         ids = [f"{pdf_id}_{c['chunk_index']}" for c in chunks]
-        metadatas = [{"page": c["page"], "chunk_index": c["chunk_index"], "pdf_id": pdf_id} for c in chunks]
+        metadatas = [
+            {
+                "page": c["page"],
+                "chunk_index": c["chunk_index"],
+                "pdf_id": pdf_id
+            }
+            for c in chunks
+        ]
 
         collection.add(
             documents=texts,
@@ -117,7 +109,7 @@ class VectorStore:
                     chunks.append({
                         "text": doc,
                         "page": meta.get("page", 0),
-                        "score": 1 - dist  # cosine similarity
+                        "score": 1 - dist
                     })
 
             return chunks
@@ -134,6 +126,32 @@ class VectorStore:
             logger.info(f"Deleted vector collection for PDF {pdf_id}")
         except Exception as e:
             logger.warning(f"Could not delete collection for {pdf_id}: {e}")
+
+    def get_all_chunks(self, pdf_id: str) -> List[Dict]:
+        """Retrieve all chunks for a PDF (useful for global queries)."""
+        try:
+            collection = self._get_collection(pdf_id)
+            results = collection.get(
+                include=["documents", "metadatas"]
+            )
+            
+            chunks = []
+            if results and results.get("documents"):
+                for doc, meta in zip(results["documents"], results["metadatas"]):
+                    chunks.append({
+                        "text": doc,
+                        "page": meta.get("page", 0),
+                        "score": 1.0,  # default score
+                        "chunk_index": meta.get("chunk_index", 0)
+                    })
+                
+                # Sort by chunk_index to maintain document flow
+                chunks.sort(key=lambda x: x["chunk_index"])
+                
+            return chunks
+        except Exception as e:
+            logger.error(f"VectorStore get_all_chunks error: {e}")
+            return []
 
     def count_chunks(self, pdf_id: str) -> int:
         """Count chunks in a PDF's collection."""

@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { pdfApi, type PDF } from '../services/api'
 import {
-  Upload, Trash2, Pencil, Sun, Moon, LogOut, BookOpen,
-  Clock, CheckCircle, XCircle, Loader, MoreVertical, ArrowRight
+  Upload, Trash2, Pencil, BookOpen, Clock, CheckCircle, XCircle, Loader, MoreVertical, ArrowRight
 } from 'lucide-react'
+import Sidebar from '../components/layout/Sidebar'
 
 function StatusBadge({ status }: { status: PDF['chunk_status'] }) {
   const map = {
@@ -33,6 +33,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const renameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (renamingId && renameInputRef.current) {
+      renameInputRef.current.focus()
+      renameInputRef.current.select()
+    }
+  }, [renamingId])
 
   useEffect(() => {
     loadPdfs()
@@ -114,29 +122,12 @@ export default function DashboardPage() {
   const lastPdf = pdfs.find(p => p.chunk_status === 'ready')
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--surface-900)' }}>
-      <div className="absolute inset-0 bg-grid-pattern pointer-events-none" />
+    <div className="h-screen flex overflow-hidden font-body" style={{ backgroundColor: 'var(--bg-page)', color: 'var(--text-primary)' }}>
+      <div className="absolute inset-0 bg-grid-pattern pointer-events-none opacity-20" />
+      <Sidebar />
 
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
-            <span>📚</span>
-          </div>
-          <span className="font-display font-bold text-lg" style={{ color: 'var(--text-primary)' }}>ParhLo</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button onClick={toggleTheme} className="btn-ghost p-2">
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button onClick={signOut} className="btn-ghost p-2">
-            <LogOut size={16} />
-          </button>
-        </div>
-      </header>
-
-      <main className="relative z-10 max-w-4xl mx-auto px-6 py-10">
+      <main className="flex-1 overflow-y-auto relative z-10 p-6 md:p-10">
+        <div className="max-w-5xl mx-auto">
         {/* Welcome */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="font-display font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
@@ -151,7 +142,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="glass-card p-4 mb-6 flex items-center gap-4 cursor-pointer hover:border-brand-500/30 transition-colors"
+            className="glass-card p-4 mb-6 flex items-center gap-4 cursor-pointer transition-colors"
             onClick={() => openStudy(lastPdf)}
           >
             <div className="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center shrink-0">
@@ -170,22 +161,31 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="glass-card p-6 mb-8 text-center border-dashed hover:border-brand-500/30 transition-colors cursor-pointer"
+          className="glass-card p-10 mb-8 text-center border-dashed transition-all cursor-pointer relative overflow-hidden group"
           onClick={() => fileInputRef.current?.click()}
         >
+          <div className="absolute inset-0 bg-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleFileChange} className="hidden" />
-          <div className="w-14 h-14 rounded-2xl bg-brand-500/15 border border-brand-500/20 flex items-center justify-center mx-auto mb-3">
+          <div className="w-16 h-16 rounded-2xl bg-brand-500/15 border border-brand-500/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
             {uploading ? (
-              <Loader size={24} className="text-brand-400 animate-spin" />
+              <Loader size={28} className="text-brand-400 animate-spin" />
             ) : (
-              <Upload size={24} className="text-brand-400" />
+              <span className="text-3xl">📚</span>
             )}
           </div>
-          <p className="font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-            {uploading ? 'Uploading...' : 'Upload PDF'}
+          <h2 className="font-display font-bold text-2xl mb-3" style={{ color: 'var(--text-primary)' }}>
+            {uploading ? 'Processing Study Material...' : 'Upload Study Material'}
+          </h2>
+          <p className="text-base mb-6 max-w-sm mx-auto" style={{ color: 'var(--text-secondary)' }}>
+            {uploading ? 'Extracting text and generating embeddings...' : 'Upload PDFs, Notes, Slides, Books, and Handouts'}
           </p>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            {uploading ? 'Processing your file...' : 'Click to browse or drag & drop · Max 50MB'}
+          {!uploading && (
+             <div className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm bg-[#4F46E5] text-white shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all group-hover:-translate-y-0.5 group-hover:bg-[#4338ca]">
+               Upload PDF
+             </div>
+          )}
+          <p className="text-xs mt-6 font-medium" style={{ color: 'var(--text-muted)' }}>
+            Supported: PDF files up to 50MB
           </p>
           {uploadError && (
             <p className="text-sm text-red-400 mt-2">{uploadError}</p>
@@ -200,10 +200,10 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : pdfs.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-5xl mb-3">📚</div>
-            <p className="font-medium mb-1" style={{ color: 'var(--text-primary)' }}>No PDFs yet</p>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Upload your first PDF to start studying</p>
+          <div className="text-center py-16 glass-card border-dashed">
+            <div className="text-5xl mb-4">📚</div>
+            <p className="font-display font-bold text-xl mb-2" style={{ color: 'var(--text-primary)' }}>Your Study Library is Empty</p>
+            <p className="text-base" style={{ color: 'var(--text-secondary)' }}>Upload your first PDF to start chatting, generating notes, and creating MCQs.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -216,17 +216,13 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="glass-card p-4 flex items-center gap-4 group"
+                className={`glass-card p-4 flex items-center gap-4 group ${openMenuId === pdf.id ? 'relative z-50' : 'relative z-10'}`}
               >
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
-                  <span className="text-xl">📄</span>
-                </div>
-
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 py-2">
                   {renamingId === pdf.id ? (
                     <div className="flex gap-2">
                       <input
-                        autoFocus
+                        ref={renameInputRef}
                         value={renameValue}
                         onChange={(e) => setRenameValue(e.target.value)}
                         onKeyDown={(e) => {
@@ -241,13 +237,24 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <>
-                      <p className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>{pdf.file_name}</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-xl">📄</span>
+                        <p className="font-semibold text-base truncate" style={{ color: 'var(--text-primary)' }}>{pdf.file_name}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Status:</span>
                         <StatusBadge status={pdf.chunk_status} />
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-xs ml-2" style={{ color: 'var(--text-muted)' }}>
                           {new Date(pdf.uploaded_at).toLocaleDateString()}
                         </span>
                       </div>
+                      {pdf.chunk_status === 'ready' && (
+                        <div className="glass-card flex flex-wrap items-center gap-4 mt-4 text-sm rounded-xl p-3 w-fit">
+                          <span className="flex items-center gap-1.5 font-semibold" style={{ color: 'var(--accent)' }}>✓ Ready for Chat</span>
+                          <span className="flex items-center gap-1.5 font-semibold" style={{ color: 'var(--accent)' }}>✓ Ready for Notes</span>
+                          <span className="flex items-center gap-1.5 font-semibold" style={{ color: 'var(--accent)' }}>✓ Ready for MCQs</span>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -280,13 +287,17 @@ export default function DashboardPage() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
-                            onClick={() => { setRenamingId(pdf.id); setRenameValue(pdf.file_name); setOpenMenuId(null) }}
+                            onClick={(e) => { e.stopPropagation(); setRenamingId(pdf.id); setRenameValue(pdf.file_name); setOpenMenuId(null); }}
                             className="btn-ghost w-full justify-start text-xs px-3 py-2"
                           >
                             <Pencil size={12} /> Rename
                           </button>
                           <button
-                            onClick={() => { handleDelete(pdf.id); setOpenMenuId(null) }}
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setOpenMenuId(null); 
+                              setTimeout(() => handleDelete(pdf.id), 10);
+                            }}
                             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-red-400 hover:bg-red-400/10 transition-colors"
                           >
                             <Trash2 size={12} /> Delete
@@ -300,6 +311,7 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+        </div>
       </main>
 
       {/* Close menus on outside click */}

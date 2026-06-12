@@ -107,6 +107,7 @@ import LoginPage from './pages/LoginPage'
 import OnboardingPage from './pages/OnboardingPage'
 import DashboardPage from './pages/DashboardPage'
 import StudyRoomPage from './pages/StudyRoomPage'
+import SettingsModal from './components/layout/SettingsModal'
 import './styles/globals.css'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -165,6 +166,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <ThemeEffect />
+        <SettingsModal />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />

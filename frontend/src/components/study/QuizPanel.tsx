@@ -118,24 +118,33 @@ export default function QuizPanel({ pdfId, disabled }: Props) {
               </div>
               
               {/* Question count selector */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Questions:</span>
-                {[5, 8, 10].map(n => (
-                  <button key={n} onClick={() => setCount(n)}
-                    className="w-9 h-9 rounded-lg text-sm font-medium transition-all"
+              <div className="flex flex-col gap-3 w-full max-w-sm mt-4">
+                {[
+                  { n: 5, icon: '⚡', title: 'Quick Quiz', time: '~2 minutes' },
+                  { n: 10, icon: '🎯', title: 'Standard Quiz', time: '~5 minutes' },
+                  { n: 20, icon: '🏆', title: 'Challenge Quiz', time: '~10 minutes' }
+                ].map(mode => (
+                  <button key={mode.n} onClick={() => setCount(mode.n)}
+                    className="flex items-center justify-between p-4 rounded-xl transition-all border glass-card text-left"
                     style={{
-                      background: count === n ? 'var(--brand)' : 'var(--surface-700)',
-                      color: count === n ? '#000' : 'var(--text-secondary)',
-                      border: `1px solid ${count === n ? 'var(--brand)' : 'var(--border)'}`
+                      borderColor: count === mode.n ? 'rgba(79,70,229,0.5)' : 'var(--glass-border)',
+                      backgroundColor: count === mode.n ? 'rgba(79,70,229,0.1)' : 'transparent',
+                      boxShadow: count === mode.n ? '0 0 15px rgba(79,70,229,0.2)' : 'none'
                     }}>
-                    {n}
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{mode.icon}</span>
+                      <div>
+                        <div className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{mode.title}</div>
+                        <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{mode.n} Questions</div>
+                      </div>
+                    </div>
+                    <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{mode.time}</div>
                   </button>
                 ))}
               </div>
 
               <button onClick={startQuiz} disabled={disabled}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{ background: 'var(--brand)', color: '#000' }}>
+                className="btn-primary mt-2 w-full max-w-sm flex items-center justify-center gap-2">
                 <Play size={16} />
                 Start Quiz
               </button>
@@ -247,7 +256,7 @@ export default function QuizPanel({ pdfId, disabled }: Props) {
 
                     <button onClick={nextQuestion}
                       className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm transition-all hover:opacity-90"
-                      style={{ background: 'var(--brand)', color: '#000' }}>
+                      style={{ background: 'var(--brand)', color: '#fff' }}>
                       {currentIndex + 1 >= questions.length ? (
                         <><Trophy size={15} /> See Results</>
                       ) : (
@@ -298,7 +307,7 @@ export default function QuizPanel({ pdfId, disabled }: Props) {
               <div className="flex gap-3">
                 <button onClick={startQuiz}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all hover:scale-105"
-                  style={{ background: 'var(--brand)', color: '#000' }}>
+                  style={{ background: 'var(--brand)', color: '#fff' }}>
                   <RotateCcw size={14} /> Retake Quiz
                 </button>
                 <button onClick={() => setState('idle')}

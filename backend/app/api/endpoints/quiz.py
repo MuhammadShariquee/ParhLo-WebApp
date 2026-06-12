@@ -37,8 +37,8 @@ async def generate_quiz(
 
     count = min(max(body.count, 3), 10)  # Clamp between 3-10
 
-    # Get relevant chunks
-    chunks = vector_store.search(body.pdf_id, "concepts definitions facts terms examples", top_k=15)
+    # Get all chunks for comprehensive quiz generation
+    chunks = vector_store.get_all_chunks(body.pdf_id)
 
     try:
         mcqs = await ai_service.generate_mcqs(chunks, count)

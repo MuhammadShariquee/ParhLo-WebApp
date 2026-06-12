@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { ZoomIn, ZoomOut, Maximize2, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-
+import { supabase } from '../../services/supabase'
 interface Props {
   pdfId: string
   pdfUrl: string
@@ -34,8 +34,16 @@ export default function PDFViewer({ pdfUrl, highlightedPages, onPageChange }: Pr
     setLoading(false)
   }
 
-  // Build URL with page parameter
-  const viewerUrl = `${pdfUrl}#page=${currentPage}`
+  const [viewerUrl, setViewerUrl] = useState('')
+
+  useEffect(() => {
+    const fetchUrl = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      setViewerUrl(`${pdfUrl}?token=${token || ''}#page=${currentPage}`)
+    }
+    fetchUrl()
+  }, [pdfUrl, currentPage])
 
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--surface-900)' }}>
@@ -105,15 +113,17 @@ export default function PDFViewer({ pdfUrl, highlightedPages, onPageChange }: Pr
           </div>
         ) : (
           <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', height: '100%', width: '100%' }}>
-            <iframe
-              ref={iframeRef}
-              src={viewerUrl}
-              className="w-full h-full border-none"
-              onLoad={handleIframeLoad}
-              onError={handleIframeError}
-              title="PDF Viewer"
-              style={{ minHeight: '100%' }}
-            />
+            {viewerUrl && (
+              <iframe
+                ref={iframeRef}
+                src={viewerUrl}
+                className="w-full h-full border-none"
+                onLoad={handleIframeLoad}
+                onError={handleIframeError}
+                title="PDF Viewer"
+                style={{ minHeight: '100%' }}
+              />
+            )}
           </div>
         )}
       </div>

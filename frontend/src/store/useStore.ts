@@ -14,9 +14,11 @@ interface AppState {
   user: User | null
   setUser: (user: User | null) => void
 
-  // Theme
+  // Theme & Settings
   theme: 'dark' | 'light'
   toggleTheme: () => void
+  isSettingsOpen: boolean
+  setIsSettingsOpen: (isOpen: boolean) => void
 
   // Language
   language: string
@@ -74,7 +76,7 @@ export const useStore = create<AppState>()(
       user: null,
       setUser: (user) => set({ user }),
 
-      // Theme
+      // Theme & Settings
       theme: 'dark',
       toggleTheme: () => {
         const newTheme = get().theme === 'dark' ? 'light' : 'dark'
@@ -87,6 +89,8 @@ export const useStore = create<AppState>()(
           document.documentElement.classList.add('dark')
         }
       },
+      isSettingsOpen: false,
+      setIsSettingsOpen: (isOpen) => set({ isSettingsOpen: isOpen }),
 
       // Language
       language: 'english',

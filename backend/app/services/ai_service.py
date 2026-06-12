@@ -3,7 +3,7 @@ AIService — Unified AI wrapper.
 Supports Gemini (primary) with easy switch to OpenAI.
 All AI calls go through this service.
 """
-import google.generativeai as genai
+from app.services.llm.llm_router import llm_router
 from app.core.config import settings
 from loguru import logger
 from typing import List, Dict, Optional
@@ -12,60 +12,16 @@ import re
 
 
 class AIService:
-    """Switchable AI service. Provider: 'gemini' or 'openai'."""
+    """Unified AI service powered by a multi-LLM fallback router."""
 
-    def __init__(self, provider: str = None):
-        self.provider = provider or settings.AI_PROVIDER
-        self._gemini_model = None
-        self._setup()
-
-    def _setup(self):
-        if self.provider == "gemini":
-            if settings.GEMINI_API_KEY:
-                genai.configure(api_key=settings.GEMINI_API_KEY)
-                self._gemini_model = genai.GenerativeModel("gemini-1.5-flash")
-                logger.info("Gemini AI initialized.")
-            else:
-                logger.warning("GEMINI_API_KEY not set. AI features will be limited.")
-        elif self.provider == "openai":
-            import openai
-            openai.api_key = settings.OPENAI_API_KEY
-            logger.info("OpenAI initialized.")
+    def __init__(self):
+        # We no longer need to initialize specific providers here,
+        # as the llm_router handles everything.
+        pass
 
     async def generate(self, prompt: str, system_prompt: str = None) -> str:
-        """Generate text from a prompt."""
-        if self.provider == "gemini":
-            return await self._gemini_generate(prompt, system_prompt)
-        elif self.provider == "openai":
-            return await self._openai_generate(prompt, system_prompt)
-        else:
-            raise ValueError(f"Unknown AI provider: {self.provider}")
-
-    async def _gemini_generate(self, prompt: str, system_prompt: str = None) -> str:
-        try:
-            full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
-            response = self._gemini_model.generate_content(full_prompt)
-            return response.text
-        except Exception as e:
-            logger.error(f"Gemini generation error: {e}")
-            raise
-
-    async def _openai_generate(self, prompt: str, system_prompt: str = None) -> str:
-        try:
-            import openai
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": prompt})
-            response = await openai.ChatCompletion.acreate(
-                model="gpt-4o-mini",
-                messages=messages,
-                max_tokens=2048
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            logger.error(f"OpenAI generation error: {e}")
-            raise
+        """Generate text from a prompt, routed through the fallback system."""
+        return await llm_router.generate_response(prompt, mode="chat", system_prompt=system_prompt)
 
     def _build_rag_system_prompt(self) -> str:
         return """You are ParhLo, an AI study assistant for Pakistani students.
@@ -157,7 +113,7 @@ INSTRUCTIONS:
         context_parts = []
         for chunk in context_chunks:
             context_parts.append(f"[Page {chunk['page']}]: {chunk['text']}")
-        context_str = "\n\n".join(context_parts[:20])  # Use top 20 chunks for notes
+        context_str = "\n\n".join(context_parts)
 
         lang_instructions = {
             "english": "Write notes in English.",
@@ -190,7 +146,7 @@ Generate comprehensive study notes:"""
             return []
 
         context_parts = []
-        for chunk in context_chunks[:15]:
+        for chunk in context_chunks:
             context_parts.append(f"[Page {chunk['page']}]: {chunk['text']}")
         context_str = "\n\n".join(context_parts)
 
@@ -247,7 +203,7 @@ Rules:
             return "No content available."
 
         context_parts = []
-        for chunk in context_chunks[:20]:
+        for chunk in context_chunks:
             context_parts.append(f"[Page {chunk['page']}]: {chunk['text']}")
         context_str = "\n\n".join(context_parts)
 

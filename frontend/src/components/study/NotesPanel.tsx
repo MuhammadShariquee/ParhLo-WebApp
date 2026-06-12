@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileText, Download, RefreshCw, Loader2, Sparkles, AlertCircle } from 'lucide-react'
+import { FileText, Download, RefreshCw, Loader2, Sparkles, AlertCircle, Copy, Check } from 'lucide-react'
 import { notesApi } from '../../services/api'
 import { useStore } from '../../store/useStore'
 
@@ -16,6 +16,7 @@ export default function NotesPanel({ pdfId, pdfName, disabled }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hasLoaded, setHasLoaded] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     loadExistingNotes()
@@ -58,43 +59,60 @@ export default function NotesPanel({ pdfId, pdfName, disabled }: Props) {
   }
 
   const renderNotes = (raw: string) => {
-    // Convert markdown-ish to styled HTML
-    return raw
-      .split('\n')
-      .map((line, i) => {
-        if (line.startsWith('## ')) {
-          return (
-            <h3 key={i} className="text-base font-semibold mt-4 mb-2 first:mt-0"
-              style={{ color: 'var(--brand)', fontFamily: 'Syne, sans-serif' }}>
-              {line.replace('## ', '')}
+    const sections: { title: string, lines: string[] }[] = []
+    let currentSection = { title: 'General', lines: [] as string[] }
+    
+    raw.split('\n').forEach(line => {
+      if (line.startsWith('## ')) {
+        if (currentSection.lines.length > 0 || currentSection.title !== 'General') {
+          sections.push(currentSection)
+        }
+        currentSection = { title: line.replace('## ', ''), lines: [] }
+      } else {
+        currentSection.lines.push(line)
+      }
+    })
+    if (currentSection.lines.length > 0) {
+      sections.push(currentSection)
+    }
+
+    return (
+      <div className="space-y-6">
+        {sections.map((section, idx) => (
+          <div key={idx} className="glass-card p-6 transition-all hover:-translate-y-1 shadow-lg hover:shadow-xl">
+            <h3 className="text-xl font-bold mb-4 text-[#4F46E5] font-display">
+              {section.title}
             </h3>
-          )
-        }
-        if (line.startsWith('- ') || line.startsWith('• ')) {
-          return (
-            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed mb-1"
-              style={{ color: 'var(--text-primary)' }}>
-              <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--brand)' }} />
-              <span>{line.replace(/^[-•]\s*/, '')}</span>
-            </li>
-          )
-        }
-        if (line.startsWith('  -') || line.startsWith('   -')) {
-          return (
-            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed mb-1 ml-4"
-              style={{ color: 'var(--text-secondary)' }}>
-              <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'var(--text-muted)' }} />
-              <span>{line.replace(/^\s*-\s*/, '')}</span>
-            </li>
-          )
-        }
-        if (line.trim() === '') return <div key={i} className="h-2" />
-        return (
-          <p key={i} className="text-sm leading-relaxed mb-1" style={{ color: 'var(--text-primary)' }}>
-            {line}
-          </p>
-        )
-      })
+            <ul className="space-y-3 m-0 p-0 list-none">
+              {section.lines.map((line, i) => {
+                if (line.startsWith('- ') || line.startsWith('• ')) {
+                  return (
+                    <li key={i} className="flex items-start gap-3 text-[15px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                      <span className="mt-2 w-1.5 h-1.5 rounded-full bg-[#4F46E5] flex-shrink-0 shadow-[0_0_8px_rgba(79,70,229,0.8)]" />
+                      <span>{line.replace(/^[-•]\s*/, '')}</span>
+                    </li>
+                  )
+                }
+                if (line.startsWith('  -') || line.startsWith('   -')) {
+                  return (
+                    <li key={i} className="flex items-start gap-3 text-sm leading-relaxed ml-6 mt-1" style={{ color: 'var(--text-secondary)' }}>
+                      <span className="mt-2 w-1 h-1 rounded-full bg-slate-500 flex-shrink-0" />
+                      <span>{line.replace(/^\s*-\s*/, '')}</span>
+                    </li>
+                  )
+                }
+                if (line.trim() === '') return null
+                return (
+                  <p key={i} className="text-[15px] leading-relaxed mb-2" style={{ color: 'var(--text-primary)' }}>
+                    {line}
+                  </p>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -110,16 +128,27 @@ export default function NotesPanel({ pdfId, pdfName, disabled }: Props) {
         </div>
         <div className="flex items-center gap-2">
           {notes && (
-            <button onClick={downloadNotes}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors hover:opacity-80"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'var(--surface-700)' }}>
-              <Download size={12} />
-              Download
-            </button>
+            <div className="flex items-center gap-2 mr-2">
+              <button onClick={() => {
+                navigator.clipboard.writeText(notes)
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+              }}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors hover:bg-[var(--glass-bg-hover)]"
+                style={{ backgroundColor: 'var(--bg-card-muted)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
+                {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+              <button onClick={downloadNotes}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors hover:bg-[var(--glass-bg-hover)]"
+                style={{ backgroundColor: 'var(--bg-card-muted)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
+                <Download size={12} />
+                Export PDF
+              </button>
+            </div>
           )}
           <button onClick={generateNotes} disabled={loading || disabled}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--brand)', border: '1px solid rgba(34,197,94,0.25)' }}>
+            className="btn-primary px-4 py-2 text-xs">
             {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
             {hasLoaded ? 'Regenerate' : 'Generate Notes'}
           </button>
@@ -161,11 +190,8 @@ export default function NotesPanel({ pdfId, pdfName, disabled }: Props) {
           </div>
         ) : notes ? (
           <AnimatePresence>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl p-4" style={{ background: 'var(--surface-800)', border: '1px solid var(--border)' }}>
-              <ul className="list-none m-0 p-0">
-                {renderNotes(notes)}
-              </ul>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              {renderNotes(notes)}
             </motion.div>
           </AnimatePresence>
         ) : (
@@ -183,8 +209,7 @@ export default function NotesPanel({ pdfId, pdfName, disabled }: Props) {
               </p>
             </div>
             <button onClick={generateNotes} disabled={disabled}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-              style={{ background: 'var(--brand)', color: '#000' }}>
+              className="btn-primary flex items-center justify-center gap-2">
               <Sparkles size={15} />
               Generate Smart Notes
             </button>

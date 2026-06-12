@@ -36,7 +36,7 @@ async def generate_notes(
         return {"notes": cached, "cached": True}
 
     # Get all chunks for comprehensive notes
-    chunks = vector_store.search(body.pdf_id, "main topics key concepts important points summary", top_k=20)
+    chunks = vector_store.get_all_chunks(body.pdf_id)
 
     try:
         notes_content = await ai_service.generate_notes(chunks, body.language)

@@ -12,6 +12,7 @@ import QuizPanel from '../components/study/QuizPanel'
 import NotesPanel from '../components/study/NotesPanel'
 import ExamPanel from '../components/study/ExamPanel'
 import PDFViewer from '../components/study/PDFViewer'
+import Sidebar from '../components/layout/Sidebar'
 
 type ActivePanel = 'chat' | 'quiz' | 'notes' | 'exam'
 type MobileView = 'pdf' | 'panel'
@@ -83,10 +84,10 @@ export default function StudyRoomPage() {
   ]
 
   const PANELS = [
-    { id: 'chat' as ActivePanel, icon: MessageSquare, label: 'Chat' },
-    { id: 'notes' as ActivePanel, icon: FileText, label: 'Notes' },
-    { id: 'quiz' as ActivePanel, icon: Brain, label: 'Quiz' },
-    { id: 'exam' as ActivePanel, icon: Trophy, label: 'Exam' },
+    { id: 'chat' as ActivePanel, icon: '💬', label: 'AI Chat' },
+    { id: 'notes' as ActivePanel, icon: '📝', label: 'Smart Notes' },
+    { id: 'quiz' as ActivePanel, icon: '🧩', label: 'MCQ Quiz' },
+    { id: 'exam' as ActivePanel, icon: '🎯', label: 'Exam Mode' },
   ]
 
   const isProcessing = pdfStatus === 'pending' || pdfStatus === 'processing'
@@ -95,65 +96,44 @@ export default function StudyRoomPage() {
   const currentDetail = DETAIL_LEVELS.find(d => d.id === detailLevel) || DETAIL_LEVELS[1]
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ background: 'var(--surface-900)' }}>
-      {/* ── Top Bar ── */}
-      <header className="flex items-center gap-3 px-4 h-14 border-b flex-shrink-0"
-        style={{ borderColor: 'var(--border)', background: 'var(--surface-800)' }}>
+    <div className="h-screen flex overflow-hidden font-body" style={{ backgroundColor: 'var(--bg-page)', color: 'var(--text-primary)' }}>
+      <Sidebar activePanel={activePanel} setActivePanel={setActivePanel as any} />
+
+      {/* ── Main Workspace ── */}
+      <div className="flex-1 flex flex-col min-w-0 border-r border-[var(--glass-border)] relative">
+        <div className="absolute inset-0 bg-grid-pattern pointer-events-none opacity-20" />
         
-        {/* Back */}
-        <button onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-1.5 text-sm transition-colors hover:opacity-80"
-          style={{ color: 'var(--text-secondary)' }}>
-          <ArrowLeft size={16} />
-          <span className="hidden sm:block">Dashboard</span>
-        </button>
-
-        <div className="w-px h-5" style={{ background: 'var(--border)' }} />
-
-        {/* PDF name */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <BookOpen size={14} style={{ color: 'var(--brand)' }} className="flex-shrink-0" />
-          <span className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-            {pdf?.file_name || 'Loading...'}
-          </span>
-          {isProcessing && (
-            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-              style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
-              <Loader2 size={10} className="animate-spin" />
-              Processing...
+        {/* Workspace Header */}
+        <header className={`h-20 flex items-center justify-between px-6 border-b border-[var(--glass-border)] shrink-0 relative ${(langDropdown || detailDropdown) ? 'z-50' : 'z-10'}`} style={{ backgroundColor: 'var(--bg-navbar)' }}>
+        
+          <div className="flex items-center gap-3">
+            <span className="text-xl">{PANELS.find(p => p.id === activePanel)?.icon}</span>
+            <span className="font-display font-bold text-xl text-[var(--text-primary)] tracking-wide">
+              {PANELS.find(p => p.id === activePanel)?.label}
             </span>
-          )}
-          {pdfStatus === 'ready' && (
-            <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-              style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
-              Ready
-            </span>
-          )}
-        </div>
+          </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Controls */}
+          <div className="flex items-center gap-3 flex-shrink-0">
           {/* Language selector */}
           <div className="relative">
-            <button onClick={() => { setLangDropdown(!langDropdown); setDetailDropdown(false) }}
-              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-colors"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'var(--surface-700)' }}>
-              <Globe size={12} />
-              <span className="hidden sm:block">{currentLang.label}</span>
-              <ChevronDown size={10} />
-            </button>
+              <button onClick={() => { setLangDropdown(!langDropdown); setDetailDropdown(false) }}
+                className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-hover)] transition-colors text-[var(--text-secondary)]">
+                <Globe size={14} />
+                <span className="hidden sm:block">{currentLang.label}</span>
+                <ChevronDown size={12} />
+              </button>
             <AnimatePresence>
               {langDropdown && (
                 <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                  className="absolute right-0 top-full mt-1 w-44 rounded-xl border shadow-xl z-50 overflow-hidden"
-                  style={{ background: 'var(--surface-700)', borderColor: 'var(--border)' }}>
+                  className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-[var(--glass-border)] shadow-2xl z-50 overflow-hidden bg-surface-900 p-1">
                   {LANGUAGES.map(l => (
-                    <button key={l.id} onClick={() => { setLanguage(l.id); setLangDropdown(false) }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left transition-colors hover:opacity-80"
-                      style={{ color: language === l.id ? 'var(--brand)' : 'var(--text-primary)', background: language === l.id ? 'rgba(34,197,94,0.08)' : '' }}>
+                    <button key={l.id} onClick={(e) => { e.stopPropagation(); setLanguage(l.id); setLangDropdown(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left transition-colors rounded-lg hover:bg-[var(--glass-bg-hover)]"
+                      style={{ color: language === l.id ? 'var(--brand)' : 'var(--text-primary)', background: language === l.id ? 'rgba(79,70,229,0.1)' : '' }}>
                       <span>{l.flag}</span>
                       <span>{l.label}</span>
-                      {language === l.id && <span className="ml-auto text-xs">✓</span>}
+                      {language === l.id && <span className="ml-auto text-xs font-bold text-brand-500">✓</span>}
                     </button>
                   ))}
                 </motion.div>
@@ -163,36 +143,30 @@ export default function StudyRoomPage() {
 
           {/* Detail level */}
           <div className="relative">
-            <button onClick={() => { setDetailDropdown(!detailDropdown); setLangDropdown(false) }}
-              className="hidden sm:flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-colors"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'var(--surface-700)' }}>
-              <span>{currentDetail.label}</span>
-              <ChevronDown size={10} />
-            </button>
+              <button onClick={() => { setDetailDropdown(!detailDropdown); setLangDropdown(false) }}
+                className="hidden sm:flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl border border-brand-500/30 bg-brand-500/10 hover:bg-brand-500/20 transition-colors text-brand-400">
+                <span>{currentDetail.label} Detail</span>
+                <ChevronDown size={12} />
+              </button>
             <AnimatePresence>
               {detailDropdown && (
                 <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                  className="absolute right-0 top-full mt-1 w-48 rounded-xl border shadow-xl z-50 overflow-hidden"
-                  style={{ background: 'var(--surface-700)', borderColor: 'var(--border)' }}>
+                  className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-[var(--glass-border)] shadow-2xl z-50 overflow-hidden bg-surface-900 p-1">
                   {DETAIL_LEVELS.map(d => (
-                    <button key={d.id} onClick={() => { setDetailLevel(d.id as any); setDetailDropdown(false) }}
-                      className="w-full flex flex-col px-3 py-2.5 text-left transition-colors hover:opacity-80"
-                      style={{ background: detailLevel === d.id ? 'rgba(34,197,94,0.08)' : '' }}>
-                      <span className="text-sm font-medium" style={{ color: detailLevel === d.id ? 'var(--brand)' : 'var(--text-primary)' }}>{d.label}</span>
-                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{d.desc}</span>
+                    <button key={d.id} onClick={(e) => { e.stopPropagation(); setDetailLevel(d.id as any); setDetailDropdown(false); }}
+                      className="w-full flex flex-col px-3 py-2.5 text-left transition-colors rounded-lg hover:bg-[var(--glass-bg-hover)]"
+                      style={{ background: detailLevel === d.id ? 'rgba(79,70,229,0.1)' : '' }}>
+                      <span className="text-sm font-medium flex items-center justify-between w-full" style={{ color: detailLevel === d.id ? 'var(--brand)' : 'var(--text-primary)' }}>
+                        {d.label}
+                        {detailLevel === d.id && <span className="text-xs font-bold text-brand-500">✓</span>}
+                      </span>
+                      <span className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{d.desc}</span>
                     </button>
                   ))}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-
-          {/* Theme toggle */}
-          <button onClick={toggleTheme}
-            className="p-1.5 rounded-lg border transition-colors"
-            style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'var(--surface-700)' }}>
-            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-          </button>
         </div>
       </header>
 
@@ -215,65 +189,21 @@ export default function StudyRoomPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Main Content ── */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Mobile View Toggle */}
-        <div className="flex md:hidden items-center gap-0 border-b flex-shrink-0 absolute bottom-20 left-1/2 -translate-x-1/2 z-30 rounded-full overflow-hidden shadow-xl"
-          style={{ background: 'var(--surface-700)', border: '1px solid var(--border)' }}>
-          <button onClick={() => setMobileView('pdf')}
-            className="px-4 py-2 text-xs font-medium transition-colors"
-            style={{ background: mobileView === 'pdf' ? 'var(--brand)' : '', color: mobileView === 'pdf' ? '#000' : 'var(--text-secondary)' }}>
-            📄 PDF
-          </button>
-          <button onClick={() => setMobileView('panel')}
-            className="px-4 py-2 text-xs font-medium transition-colors"
-            style={{ background: mobileView === 'panel' ? 'var(--brand)' : '', color: mobileView === 'panel' ? '#000' : 'var(--text-secondary)' }}>
-            💬 Chat
-          </button>
-        </div>
+      {/* Mobile View Toggle */}
+      <div className="flex lg:hidden items-center gap-0 border flex-shrink-0 absolute bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-full overflow-hidden shadow-2xl" style={{ backgroundColor: 'var(--bg-page)', borderColor: 'var(--glass-border)' }}>
+        <button onClick={() => setMobileView('panel')}
+          className={`px-6 py-3 text-sm font-bold transition-colors ${mobileView === 'panel' ? 'bg-brand-500 text-white' : 'text-[var(--text-secondary)]'}`}>
+          💬 Workspace
+        </button>
+        <button onClick={() => setMobileView('pdf')}
+          className={`px-6 py-3 text-sm font-bold transition-colors ${mobileView === 'pdf' ? 'bg-brand-500 text-white' : 'text-[var(--text-secondary)]'}`}>
+          📄 PDF
+        </button>
+      </div>
 
-        {/* ── PDF Viewer (Left) ── */}
-        <div className={`${mobileView === 'pdf' ? 'flex' : 'hidden'} md:flex flex-col border-r`}
-          style={{ width: 'clamp(300px, 45%, 600px)', borderColor: 'var(--border)', minWidth: '0' }}>
-          {pdf ? (
-            <PDFViewer
-              pdfId={pdf.id}
-              pdfUrl={pdfApi.getServeUrl(pdf.id)}
-              highlightedPages={highlightedPages}
-              onPageChange={setCurrentPdfPage}
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <Loader2 size={24} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
-            </div>
-          )}
-        </div>
-
-        {/* ── Right Panel ── */}
-        <div className={`${mobileView === 'panel' ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-w-0`}>
-          {/* Panel Tabs */}
-          <div className="flex items-center gap-1 px-3 py-2 border-b flex-shrink-0"
-            style={{ borderColor: 'var(--border)', background: 'var(--surface-800)' }}>
-            {PANELS.map(panel => {
-              const Icon = panel.icon
-              const isActive = activePanel === panel.id
-              return (
-                <button key={panel.id} onClick={() => setActivePanel(panel.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={{
-                    background: isActive ? 'rgba(34,197,94,0.15)' : 'transparent',
-                    color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
-                    border: isActive ? '1px solid rgba(34,197,94,0.25)' : '1px solid transparent'
-                  }}>
-                  <Icon size={13} />
-                  <span>{panel.label}</span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Panel Content */}
-          <div className="flex-1 overflow-hidden">
+      {/* ── Active Panel Container ── */}
+      <div className={`${mobileView === 'panel' ? 'flex' : 'hidden'} lg:flex flex-1 overflow-hidden p-6 relative z-10`}>
+        <div className="w-full h-full glass-card rounded-2xl overflow-hidden flex flex-col relative">
             <AnimatePresence mode="wait">
               {activePanel === 'chat' && pdf && (
                 <motion.div key="chat" className="h-full"
@@ -304,10 +234,41 @@ export default function StudyRoomPage() {
                   <Loader2 size={24} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
                 </div>
               )}
-            </AnimatePresence>
-          </div>
+          </AnimatePresence>
         </div>
       </div>
+    </div>
+
+    {/* ── Right Context Panel (PDF) ── */}
+    <div className={`${mobileView === 'pdf' ? 'flex fixed inset-0 z-40 pt-0' : 'hidden'} lg:flex lg:w-[35%] min-w-[350px] flex-col relative z-10`} style={{ backgroundColor: 'var(--bg-page)' }}>
+      <div className="h-20 border-b border-[var(--glass-border)] flex items-center justify-between px-6 shrink-0" style={{ backgroundColor: 'var(--bg-navbar)' }}>
+         <div className="flex items-center gap-3 min-w-0">
+           <BookOpen size={18} className="text-brand-400 shrink-0" />
+           <span className="text-sm font-bold text-[var(--text-primary)] truncate">{pdf?.file_name || 'Loading...'}</span>
+         </div>
+         {pdfStatus === 'ready' && (
+           <span className="text-[10px] font-bold px-2 py-1 rounded bg-green-500/20 text-green-500 uppercase tracking-wider shrink-0 ml-3">
+             Ready
+           </span>
+         )}
+      </div>
+      <div className="flex-1 overflow-hidden p-6 pb-24 lg:pb-6">
+        <div className="w-full h-full glass-card rounded-2xl overflow-hidden shadow-2xl relative border" style={{ borderColor: 'var(--border)' }}>
+          {pdf ? (
+            <PDFViewer
+              pdfId={pdf.id}
+              pdfUrl={pdfApi.getServeUrl(pdf.id)}
+              highlightedPages={highlightedPages}
+              onPageChange={setCurrentPdfPage}
+            />
+          ) : (
+            <div className="flex-1 h-full flex items-center justify-center">
+              <Loader2 size={24} className="animate-spin text-slate-500" />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
 
       {/* Click-away handlers */}
       {(langDropdown || detailDropdown) && (

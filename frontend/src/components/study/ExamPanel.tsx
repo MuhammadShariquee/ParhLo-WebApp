@@ -54,7 +54,7 @@ export default function ExamPanel({ pdfId, disabled }: Props) {
         if (parts) {
           return (
             <div key={i} className="flex gap-3 p-3 rounded-xl mb-2"
-              style={{ background: 'var(--surface-700)', border: '1px solid var(--border)' }}>
+              style={{ backgroundColor: 'var(--bg-card-muted)', border: '1px solid var(--border)' }}>
               <span className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
                 style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--brand)' }}>
                 {parts[1]}
@@ -113,7 +113,7 @@ export default function ExamPanel({ pdfId, disabled }: Props) {
               <button key={t.id} onClick={() => setActiveTab(t.id)}
                 className="flex-1 flex flex-col items-center py-2 px-2 rounded-xl transition-all text-center"
                 style={{
-                  background: isActive ? 'rgba(34,197,94,0.12)' : 'var(--surface-700)',
+                  backgroundColor: isActive ? 'rgba(34,197,94,0.12)' : 'var(--bg-card-muted)',
                   border: `1px solid ${isActive ? 'rgba(34,197,94,0.3)' : 'var(--border)'}`,
                   color: isActive ? 'var(--brand)' : 'var(--text-secondary)'
                 }}>
@@ -180,7 +180,7 @@ export default function ExamPanel({ pdfId, disabled }: Props) {
             {!loading[activeTab] && !content[activeTab] && !error[activeTab] && (
               <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                  style={{ background: 'var(--surface-700)', border: '1px solid var(--border)' }}>
+                  style={{ backgroundColor: 'var(--bg-card-muted)', border: '1px solid var(--border)' }}>
                   <TabIcon size={24} style={{ color: 'var(--text-muted)' }} />
                 </div>
                 <div>
@@ -204,7 +204,7 @@ export default function ExamPanel({ pdfId, disabled }: Props) {
 
                 <button onClick={() => generate(activeTab)} disabled={disabled}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  style={{ background: 'var(--brand)', color: '#000' }}>
+                  style={{ background: 'var(--brand)', color: '#fff' }}>
                   <TabIcon size={14} />
                   Generate {tab.label} Questions
                 </button>

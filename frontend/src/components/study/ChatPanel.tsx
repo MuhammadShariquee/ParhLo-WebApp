@@ -4,13 +4,39 @@ import { useStore, type LocalChatMessage } from '../../store/useStore'
 import { chatApi } from '../../services/api'
 import {
   Send, Copy, RotateCcw, Lightbulb, Minimize2, Hash,
-  BookMarked, AlertCircle, CheckCheck, Bot, User
+  BookMarked, AlertCircle, CheckCheck, Bot, User, ShieldCheck
 } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 
 interface ChatPanelProps {
   pdfId: string
   onPageJump?: (page: number) => void
+}
+
+const TypingEffect = ({ text }: { text: string }) => {
+  const [displayedText, setDisplayedText] = useState('')
+
+  useEffect(() => {
+    let i = 0
+    const interval = setInterval(() => {
+      setDisplayedText(text.slice(0, i + 3))
+      i += 3
+      if (i >= text.length) {
+        setDisplayedText(text)
+        clearInterval(interval)
+      }
+    }, 10)
+    return () => clearInterval(interval)
+  }, [text])
+
+  return (
+    <span className="relative">
+      {displayedText}
+      {displayedText.length < text.length && (
+        <span className="inline-block ml-[2px] w-[2px] h-[1em] bg-white align-middle animate-[pulse_0.5s_ease-in-out_infinite]" />
+      )}
+    </span>
+  )
 }
 
 function formatTime(date: Date) {
@@ -38,14 +64,9 @@ function ChatBubble({ msg, onCopy, onRegenerate, onQuickAction, onPageJump }: {
         <div className="w-8 h-8 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center shrink-0 mt-1">
           <Bot size={14} className="text-brand-400" />
         </div>
-        <div className="chat-bubble-ai flex items-center gap-2">
-          <div className="flex gap-1">
-            {[0,1,2].map(i => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-brand-500/60 animate-bounce"
-                style={{ animationDelay: `${i * 0.2}s` }} />
-            ))}
-          </div>
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Thinking...</span>
+        <div className="chat-bubble-ai flex flex-col gap-2 min-w-[150px]">
+          <div className="w-3/4 h-3 rounded bg-white/10 animate-pulse" />
+          <div className="w-1/2 h-3 rounded bg-white/10 animate-pulse" />
         </div>
       </div>
     )
@@ -58,7 +79,7 @@ function ChatBubble({ msg, onCopy, onRegenerate, onQuickAction, onPageJump }: {
           <p className="whitespace-pre-wrap">{msg.content}</p>
           <p className="text-xs mt-1 opacity-50 text-right">{formatTime(msg.timestamp)}</p>
         </div>
-        <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-1">
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-1" style={{ backgroundColor: 'var(--bg-card-muted)' }}>
           <User size={14} style={{ color: 'var(--text-secondary)' }} />
         </div>
       </div>
@@ -71,22 +92,27 @@ function ChatBubble({ msg, onCopy, onRegenerate, onQuickAction, onPageJump }: {
         <Bot size={14} className="text-brand-400" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="chat-bubble-ai">
-          <div className="prose-chat whitespace-pre-wrap">{msg.content}</div>
+        <div className="chat-bubble-ai glass-card">
+          <div className="prose-chat whitespace-pre-wrap"><TypingEffect text={msg.content} /></div>
 
           {/* Source pages */}
           {msg.source_pages && msg.source_pages.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Source:</span>
-              {msg.source_pages.map(page => (
-                <button
-                  key={page}
-                  onClick={() => onPageJump?.(page)}
-                  className="source-badge hover:bg-brand-500/25 transition-colors"
-                >
-                  <BookMarked size={10} /> Page {page}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+              <div className="inline-flex items-center gap-2 border px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'var(--bg-card-muted)', borderColor: 'var(--border)' }}>
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>📄 Document</span>
+                {msg.source_pages.map(page => (
+                  <button
+                    key={page}
+                    onClick={() => onPageJump?.(page)}
+                    className="text-xs font-semibold text-brand-400 hover:text-brand-300 transition-colors"
+                  >
+                    Pg {page}
+                  </button>
+                ))}
+                <div className="w-px h-3 mx-1" style={{ backgroundColor: 'var(--border)' }} />
+                <ShieldCheck size={14} className="text-green-400" />
+                <span className="text-green-400 text-xs font-bold tracking-wide uppercase">Verified Source</span>
+              </div>
             </div>
           )}
 
@@ -305,7 +331,7 @@ export default function ChatPanel({ pdfId, onPageJump }: ChatPanelProps) {
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-4 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
-        <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--surface-700)' }}>
+        <div className="flex gap-1 p-1 rounded-lg" style={{ backgroundColor: 'var(--bg-card-muted)' }}>
           {DETAIL_LEVELS.map(l => (
             <button
               key={l.value}
@@ -313,15 +339,16 @@ export default function ChatPanel({ pdfId, onPageJump }: ChatPanelProps) {
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
                 detailLevel === l.value
                   ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'hover:opacity-70'
               }`}
+              style={{ color: detailLevel !== l.value ? 'var(--text-secondary)' : undefined }}
             >
               {l.label}
             </button>
           ))}
         </div>
 
-        <div className="flex gap-1 p-1 rounded-lg ml-auto" style={{ background: 'var(--surface-700)' }}>
+        <div className="flex gap-1 p-1 rounded-lg ml-auto" style={{ backgroundColor: 'var(--bg-card-muted)' }}>
           {LANGUAGES.map(l => (
             <button
               key={l.value}
@@ -329,8 +356,9 @@ export default function ChatPanel({ pdfId, onPageJump }: ChatPanelProps) {
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
                 language === l.value
                   ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'hover:opacity-70'
               }`}
+              style={{ color: language !== l.value ? 'var(--text-secondary)' : undefined }}
             >
               {l.label}
             </button>
@@ -342,8 +370,9 @@ export default function ChatPanel({ pdfId, onPageJump }: ChatPanelProps) {
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-4 py-12">
-            <div className="w-16 h-16 rounded-2xl bg-brand-500/15 border border-brand-500/30 flex items-center justify-center">
-              <Bot size={28} className="text-brand-400" />
+            <div className="flex items-center justify-center transition-colors border w-16 h-16"
+                 style={{ backgroundColor: 'var(--empty-icon-bg)', borderColor: 'var(--empty-icon-border)', borderRadius: 'var(--empty-icon-radius)' }}>
+              <Bot size={28} style={{ color: 'var(--empty-icon-color)' }} />
             </div>
             <div className="text-center">
               <p className="font-medium mb-1" style={{ color: 'var(--text-primary)' }}>Ask anything</p>
@@ -389,7 +418,7 @@ export default function ChatPanel({ pdfId, onPageJump }: ChatPanelProps) {
       {/* Input */}
       <div className="p-4 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
         <div className="flex gap-2 items-end p-3 rounded-2xl border focus-within:border-brand-500/50 transition-colors"
-          style={{ background: 'var(--surface-700)', borderColor: 'var(--border)' }}>
+          style={{ backgroundColor: 'var(--bg-card-muted)', borderColor: 'var(--border)' }}>
           <textarea
             ref={textareaRef}
             value={input}

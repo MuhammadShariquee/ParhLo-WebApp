@@ -26,12 +26,25 @@ class QuickActionRequest(BaseModel):
     current_answer: str
 
 
+def classify_query(query: str) -> str:
+    """Classify if the query needs full document context or just vector search."""
+    global_keywords = [
+        "summarize", "summary", "notes", "chapters",
+        "overview", "full", "entire", "mcq", "questions",
+        "what is this document about", "outline"
+    ]
+    query_lower = query.lower()
+    if any(word in query_lower for word in global_keywords):
+        return "GLOBAL"
+    return "LOCAL"
+
+
 @router.post("/ask")
 async def ask_question(
     body: AskRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Ask a question about a PDF using RAG."""
+    """Ask a question about a PDF using RAG or Full Document mode."""
     # Verify PDF access
     pdf = await db.get_pdf_by_id(body.pdf_id, current_user["id"])
     if not pdf:
@@ -62,8 +75,15 @@ async def ask_question(
         )
         return cached
 
-    # Retrieve relevant chunks
-    chunks = vector_store.search(body.pdf_id, body.question)
+    # Classify Query Type
+    query_type = classify_query(body.question)
+    logger.info(f"Query classified as {query_type}: '{body.question}'")
+
+    # Route to correct chunk retrieval strategy
+    if query_type == "GLOBAL":
+        chunks = vector_store.get_all_chunks(body.pdf_id)
+    else:
+        chunks = vector_store.search(body.pdf_id, body.question)
 
     if not chunks:
         no_context_response = {
