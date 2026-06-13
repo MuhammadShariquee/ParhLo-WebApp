@@ -38,6 +38,9 @@ export default function NotesPanel({ pdfId, pdfName, disabled }: Props) {
     setError('')
     try {
       const data = await notesApi.generate(pdfId, language)
+      if (data.notes.startsWith('ERROR_LIMIT:') || data.notes.startsWith('ERROR_QUOTA:')) {
+        throw new Error(data.notes.replace(/ERROR_LIMIT:|ERROR_QUOTA:/, ''))
+      }
       setNotes(data.notes)
       setHasLoaded(true)
     } catch (err: any) {
@@ -159,9 +162,13 @@ export default function NotesPanel({ pdfId, pdfName, disabled }: Props) {
       <div className="flex-1 overflow-y-auto p-4">
         {error && (
           <div className="flex items-start gap-2 p-3 rounded-xl mb-4 text-sm"
-            style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+            style={
+              error.startsWith('ERROR_')
+                ? { background: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.2)' }
+                : { background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }
+            }>
             <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-            {error}
+            {error.replace(/ERROR_LIMIT:|ERROR_QUOTA:/, '')}
           </div>
         )}
 

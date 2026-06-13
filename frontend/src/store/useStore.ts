@@ -20,6 +20,10 @@ interface AppState {
   isSettingsOpen: boolean
   setIsSettingsOpen: (isOpen: boolean) => void
 
+  // Mobile Menu
+  isMobileMenuOpen: boolean
+  setIsMobileMenuOpen: (isOpen: boolean) => void
+
   // Language
   language: string
   setLanguage: (lang: string) => void
@@ -91,6 +95,10 @@ export const useStore = create<AppState>()(
       },
       isSettingsOpen: false,
       setIsSettingsOpen: (isOpen) => set({ isSettingsOpen: isOpen }),
+
+      // Mobile Menu
+      isMobileMenuOpen: false,
+      setIsMobileMenuOpen: (isOpen) => set({ isMobileMenuOpen: isOpen }),
 
       // Language
       language: 'english',

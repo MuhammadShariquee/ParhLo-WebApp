@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { pdfApi, type PDF } from '../services/api'
 import {
-  Trash2, Pencil, BookOpen, Clock, CheckCircle, XCircle, Loader, MoreVertical, ArrowRight
+  Trash2, Pencil, BookOpen, Clock, CheckCircle, XCircle, Loader, MoreVertical, ArrowRight, Menu
 } from 'lucide-react'
 import Sidebar from '../components/layout/Sidebar'
 
@@ -25,7 +25,7 @@ function StatusBadge({ status }: { status: PDF['chunk_status'] }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const { user, pdfs, setPdfs, addPdf, updatePdf, removePdf } = useStore()
+  const { user, pdfs, setPdfs, addPdf, updatePdf, removePdf, setIsMobileMenuOpen } = useStore()
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -129,11 +129,16 @@ export default function DashboardPage() {
       <main className="flex-1 overflow-y-auto relative z-10 p-6 md:p-10">
         <div className="max-w-5xl mx-auto">
         {/* Welcome */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="font-display font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
-            Assalam o Alaikum, {user?.name?.split(' ')[0] || 'Student'}! 👋
-          </h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Ready to study smarter today?</p>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-start gap-4">
+          <button className="md:hidden mt-1.5 p-1 -ml-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
+            <Menu size={24} />
+          </button>
+          <div>
+            <h1 className="font-display font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
+              Assalam o Alaikum, {user?.name?.split(' ')[0] || 'Student'}! 👋
+            </h1>
+            <p style={{ color: 'var(--text-secondary)' }}>Ready to study smarter today?</p>
+          </div>
         </motion.div>
 
         {/* Continue last session */}

@@ -4,7 +4,7 @@ import { useStore, type LocalChatMessage } from '../../store/useStore'
 import { chatApi } from '../../services/api'
 import {
   Send, Copy, RotateCcw, Lightbulb, Minimize2, Hash,
-  AlertCircle, CheckCheck, Bot, User, ShieldCheck
+  AlertCircle, CheckCheck, Bot, User, ShieldCheck, Clock, Info
 } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -81,6 +81,29 @@ function ChatBubble({ msg, onCopy, onRegenerate, onQuickAction, onPageJump }: {
         </div>
         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-1" style={{ backgroundColor: 'var(--bg-card-muted)' }}>
           <User size={14} style={{ color: 'var(--text-secondary)' }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (msg.content.startsWith('ERROR_LIMIT:') || msg.content.startsWith('ERROR_QUOTA:')) {
+    const isLimit = msg.content.startsWith('ERROR_LIMIT:')
+    const text = msg.content.replace(/ERROR_LIMIT:|ERROR_QUOTA:/, '')
+    return (
+      <div className="flex gap-3 items-start">
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-1" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+          {isLimit ? <AlertCircle size={14} className="text-amber-500" /> : <Clock size={14} className="text-amber-500" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="chat-bubble-ai glass-card border" style={{ backgroundColor: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.2)' }}>
+            <p className="text-[15px] font-medium leading-relaxed mb-2" style={{ color: 'var(--text-primary)' }}>
+              {isLimit ? 'Request Too Large' : 'AI Quota Reached'}
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              {text}
+            </p>
+            <p className="text-xs mt-3 opacity-50">{formatTime(msg.timestamp)}</p>
+          </div>
         </div>
       </div>
     )

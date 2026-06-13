@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BookOpen, Globe, ChevronDown, Loader2, AlertCircle
+  BookOpen, Globe, ChevronDown, Loader2, AlertCircle, Menu
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { pdfApi, type PDF } from '../services/api'
@@ -21,7 +21,7 @@ export default function StudyRoomPage() {
   const navigate = useNavigate()
   const {
     activePdf, setActivePdf, language, setLanguage,
-    detailLevel, setDetailLevel, highlightedPages, setHighlightedPages, setCurrentPdfPage
+    detailLevel, setDetailLevel, highlightedPages, setHighlightedPages, setCurrentPdfPage, setIsMobileMenuOpen
   } = useStore()
 
   const [pdf, setPdf] = useState<PDF | null>(activePdf)
@@ -105,9 +105,12 @@ export default function StudyRoomPage() {
         {/* Workspace Header */}
         <header className={`h-20 flex items-center justify-between px-6 border-b border-[var(--glass-border)] shrink-0 relative ${(langDropdown || detailDropdown) ? 'z-50' : 'z-10'}`} style={{ backgroundColor: 'var(--bg-navbar)' }}>
         
-          <div className="flex items-center gap-3">
-            <span className="text-xl">{PANELS.find(p => p.id === activePanel)?.icon}</span>
-            <span className="font-display font-bold text-xl text-[var(--text-primary)] tracking-wide">
+          <div className="flex items-center gap-2 md:gap-3">
+            <button className="md:hidden p-1.5 -ml-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
+              <Menu size={22} />
+            </button>
+            <span className="text-xl hidden sm:inline-block">{PANELS.find(p => p.id === activePanel)?.icon}</span>
+            <span className="font-display font-bold text-lg md:text-xl text-[var(--text-primary)] tracking-wide truncate">
               {PANELS.find(p => p.id === activePanel)?.label}
             </span>
           </div>

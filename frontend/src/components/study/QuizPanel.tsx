@@ -166,8 +166,10 @@ export default function QuizPanel({ pdfId, disabled }: Props) {
           {state === 'error' && (
             <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
-              <AlertCircle size={32} style={{ color: '#ef4444' }} />
-              <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>
+              <AlertCircle size={32} style={{ color: error.startsWith('ERROR_') ? '#d97706' : '#ef4444' }} />
+              <p className="text-sm max-w-sm" style={{ color: error.startsWith('ERROR_') ? '#d97706' : '#ef4444' }}>
+                {error.replace(/ERROR_LIMIT:|ERROR_QUOTA:/, '')}
+              </p>
               <button onClick={() => setState('idle')}
                 className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg"
                 style={{ background: 'var(--surface-700)', color: 'var(--text-primary)' }}>

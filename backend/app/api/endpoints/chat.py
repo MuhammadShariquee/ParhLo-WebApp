@@ -102,6 +102,10 @@ async def ask_question(
             detail_level=body.detail_level,
             language=body.language
         )
+    except ValueError as e:
+        if str(e).startswith("ERROR_"):
+            raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=503, detail="AI service temporarily unavailable. Please try again.")
     except Exception as e:
         logger.error(f"AI generation error: {e}")
         raise HTTPException(status_code=503, detail="AI service temporarily unavailable. Please try again.")
@@ -158,6 +162,10 @@ async def quick_action(
             context_chunks=chunks
         )
         return {"answer": result, "action": body.action}
+    except ValueError as e:
+        if str(e).startswith("ERROR_"):
+            raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=503, detail="AI service error. Please try again.")
     except Exception as e:
         logger.error(f"Quick action error: {e}")
         raise HTTPException(status_code=503, detail="AI service error. Please try again.")

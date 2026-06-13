@@ -154,9 +154,13 @@ export default function ExamPanel({ pdfId, disabled }: Props) {
             {/* Error */}
             {error[activeTab] && (
               <div className="flex items-start gap-2 p-3 rounded-xl mb-4 text-sm"
-                style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+                style={
+                  error[activeTab].startsWith('ERROR_')
+                    ? { background: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.2)' }
+                    : { background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }
+                }>
                 <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-                {error[activeTab]}
+                {error[activeTab].replace(/ERROR_LIMIT:|ERROR_QUOTA:/, '')}
               </div>
             )}
 

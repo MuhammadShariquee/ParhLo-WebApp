@@ -40,9 +40,13 @@ async def generate_notes(
 
     try:
         notes_content = await ai_service.generate_notes(chunks, body.language)
+    except ValueError as e:
+        if str(e).startswith("ERROR_"):
+            raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to generate notes")
     except Exception as e:
-        logger.error(f"Notes generation error: {e}")
-        raise HTTPException(status_code=503, detail="AI service error")
+        logger.error(f"Generate notes error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate notes")
 
     # Save notes to DB
     try:

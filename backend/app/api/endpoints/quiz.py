@@ -42,9 +42,15 @@ async def generate_quiz(
 
     try:
         mcqs = await ai_service.generate_mcqs(chunks, count)
+        if not mcqs:
+            raise HTTPException(status_code=400, detail="Could not generate questions. Try a different topic.")
+    except ValueError as e:
+        if str(e).startswith("ERROR_"):
+            raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to generate quiz")
     except Exception as e:
-        logger.error(f"Quiz generation error: {e}")
-        raise HTTPException(status_code=503, detail="AI service error")
+        logger.error(f"Generate quiz error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate quiz")
 
     if not mcqs:
         raise HTTPException(status_code=422, detail="Could not generate questions from this PDF")

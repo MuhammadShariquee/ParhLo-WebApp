@@ -52,9 +52,13 @@ async def generate_exam_questions(
             question_type=body.question_type,
             language=body.language
         )
+    except ValueError as e:
+        if str(e).startswith("ERROR_"):
+            raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to generate exam")
     except Exception as e:
-        logger.error(f"Exam generation error: {e}")
-        raise HTTPException(status_code=503, detail="AI service error")
+        logger.error(f"Generate exam error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate exam")
 
     # Cache for 1 hour
     cache.set(cache_key, questions, ttl=3600)

@@ -31,14 +31,19 @@ class LLMRouter:
             logger.warning(f"Groq failed: {e}. Switching to OpenAI.")
 
         # Try OpenAI
+        last_error = ""
         try:
             logger.info(f"Routing request to OpenAI (Final Fallback). Mode: {mode}")
             return await self.openai.generate_response(prompt, mode, system_prompt)
         except Exception as e:
+            last_error = str(e).lower()
             logger.error(f"OpenAI failed: {e}. All providers exhausted.")
 
         # Friendly error message if all fail
-        return "I'm currently experiencing high traffic and unable to connect to my AI providers. Please try again in a few moments."
+        if "413" in last_error or "token" in last_error or "too large" in last_error or "maximum context" in last_error:
+            return "ERROR_LIMIT:This document/request is quite large for our free AI tier. Try asking a more specific question, or generating notes for a smaller section."
+        
+        return "ERROR_QUOTA:We've reached our free AI usage limit for now. This typically resets within a few minutes to an hour. Please try again shortly!"
 
 # Singleton instance
 llm_router = LLMRouter()
