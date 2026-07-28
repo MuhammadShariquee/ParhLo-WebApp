@@ -322,7 +322,7 @@ MIT License — free to use, modify, and distribute.
 
 ---
 
-*Built with ❤️ for Pakistani students. Stop scrolling, ParhLo!*
+*Built with  for Pakistani students. Stop scrolling, ParhLo!*
 
 Currently live app is not wroking because the backend which i deployed on Railway has ended and its asking for subscription so for now im not doing that and I'm looking forward to solve this as soon as possible Thanks!
 Solving the issue....
